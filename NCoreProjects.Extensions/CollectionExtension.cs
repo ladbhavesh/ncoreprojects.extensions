@@ -14,9 +14,35 @@ namespace NCoreProjects.Extensions
             return collection.Any();
         }
 
+        public static IEnumerable<T> SafeWhere<T>(this IEnumerable<T> collection, Func<T, bool> predicate)
+        {
+            var isEmpty = collection.IsNullOrEmpty();
+
+            if (isEmpty)
+                return Enumerable.Empty<T>();
+
+
+            return collection.Where(predicate);
+
+        }
+
+        public static bool SafeAny<T>(this IEnumerable<T> collection, Func<T, bool> predicate)
+        {
+            var isEmpty = collection.IsNullOrEmpty();
+
+            if (!isEmpty)
+            {
+                return collection.Any(predicate);
+            }
+
+            return isEmpty;
+        }
+
         public static bool SafeAny<T>(this IEnumerable<T> collection)
         {
             return collection.IsNullOrEmpty();
+
+           
         }
 
         public static List<T> ToSafeList<T>(this IEnumerable<T> collection) 
