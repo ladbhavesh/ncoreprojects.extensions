@@ -1,10 +1,8 @@
-name: .NET Core
+name: Release to Nuget
 
 on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+  release:
+    types: [published]
 
 jobs:
   build:
@@ -17,12 +15,18 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 3.1.101
-    - name: Install dependencies
-      run: dotnet restore
-    - name: Build
-      run: dotnet build --configuration Release --no-restore
-    - name: Publish to Nuget
-      uses: brandedoutcast/publish-nuget@v2.5.2
+    - name: Create NuGet Package
+      run: dotnet pack -c Release /p:Version=${{ github.event.release.tag_name }} /p:PackageReleaseNotes="See https://github.com/ladbhavesh/ncoreprojects.extensions/releases/tag/${{ github.event.release.tag_name }}"
+      working-directory: ./ncoreprojects.extensions      
+    - name: Archive NuGet Package
+      uses: actions/upload-artifact@v1
       with:
-          PROJECT_FILE_PATH: NCoreProjects.Extensions/NCoreProjects.Extensions.csproj
-          NUGET_KEY: ${{secrets.API_PUSH}}
+        name: ncoreprojects.extensions
+        path: ./ncoreprojects.extensions/NCoreProjects.Extensions/bin/Release/NCoreProjects.Extensions.${{ github.event.release.tag_name }}.nupkg
+    - name: Archive NuGet Package
+      uses: actions/upload-artifact@v1
+      with:
+        name: ncoreprojects.extensions
+        path: ./ncoreprojects.extensions/NCoreProjects.Extensions/bin/Release/NCoreProjects.Extensions.${{ github.event.release.tag_name }}.nupkg
+    - name: Publish Nuget Package
+      run: dotnet nuget push **/*.nupkg --api-key ${{ secrets.nuget_api_key }} --source https://api.nuget.org/v3/index.json --no-symbols true
